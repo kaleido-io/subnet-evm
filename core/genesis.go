@@ -205,11 +205,16 @@ func SetupGenesisBlock(
 	header := rawdb.ReadHeader(db, stored, 0)
 	if header.Root != types.EmptyRootHash && !triedb.Initialized(header.Root) {
 		// Ensure the stored genesis matches with the given one.
+		marshalledGenesis, err := genesis.MarshalJSON()
+		if err != nil {
+			log.Error("Error marshalling genesis", "error", err.Error())
+		}
+		fmt.Printf("GENESIS IN-MEMORY: %+v\n", string(marshalledGenesis))
 		hash := genesis.ToBlock().Hash()
 		if hash != stored {
 			return genesis.Config, common.Hash{}, &GenesisMismatchError{stored, hash}
 		}
-		_, err := genesis.Commit(db, triedb)
+		_, err = genesis.Commit(db, triedb)
 		return genesis.Config, common.Hash{}, err
 	}
 	// Check whether the genesis block is already written.
